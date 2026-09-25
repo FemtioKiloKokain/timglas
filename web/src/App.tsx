@@ -99,12 +99,16 @@ function ConnectedTournament({
   onLeaveTournament: () => void;
 }) {
   const [view, setView] = useState<View>({ name: 'home' });
-  const { snapshot, connected, admin, error, clearError, send, serverNow } = useTournament(
-    slug,
-    playerId,
-    name,
-    adminKey,
-  );
+  const {
+    snapshot,
+    connected,
+    admin,
+    playerId: myId,
+    error,
+    clearError,
+    send,
+    serverNow,
+  } = useTournament(slug, playerId, name, adminKey);
 
   // Håll serverns namn i synk vid namnbyte.
   useEffect(() => {
@@ -137,7 +141,7 @@ function ConnectedTournament({
     content = (
       <RoomScreen
         room={room}
-        playerId={playerId}
+        playerId={myId}
         turnBonusMs={snapshot.settings.turnBonusMs}
         send={send}
         serverNow={serverNow}
@@ -149,7 +153,7 @@ function ConnectedTournament({
       <Home
         slug={slug}
         snapshot={snapshot}
-        playerId={playerId}
+        playerId={myId}
         onOpenRoom={(index) => setView({ name: 'room', index })}
       />
     );

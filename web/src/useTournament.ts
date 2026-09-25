@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClientMsg, ServerMsg, Snapshot } from '@shared/types';
 import { serverWsUrl } from './config';
+import { setPlayerId } from './identity';
 
 export interface TournamentConnection {
   snapshot: Snapshot | null;
   connected: boolean;
   admin: boolean;
+  /** Klientens faktiska id (kan ha återtagits via namn av servern). */
+  playerId: string;
   error: string | null;
   clearError: () => void;
   send: (msg: ClientMsg) => void;
@@ -15,13 +18,14 @@ export interface TournamentConnection {
 
 export function useTournament(
   slug: string,
-  playerId: string,
+  requestedPlayerId: string,
   name: string,
   adminKey?: string,
 ): TournamentConnection {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [connected, setConnected] = useState(false);
   const [admin, setAdmin] = useState(false);
+  const [playerId, setEffectiveId] = useState(requestedPlayerId);
   const [error, setError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -30,6 +34,8 @@ export function useTournament(
   nameRef.current = name;
   const adminKeyRef = useRef(adminKey);
   adminKeyRef.current = adminKey;
+  const effectiveIdRef = useRef(playerId);
+  effectiveIdRef.current = playerId;
 
   useEffect(() => {
     let closedByUs = false;
@@ -45,7 +51,7 @@ export function useTournament(
           JSON.stringify({
             type: 'hello',
             tournament: slug,
-            playerId,
+            playerId: effectiveIdRef.current,
             name: nameRef.current,
             adminKey: adminKeyRef.current,
           } satisfies ClientMsg),
@@ -64,6 +70,11 @@ export function useTournament(
           setSnapshot(msg);
         } else if (msg.type === 'welcome') {
           setAdmin(msg.admin);
+          if (msg.playerId && msg.playerId !== effectiveIdRef.current) {
+            effectiveIdRef.current = msg.playerId;
+            setEffectiveId(msg.playerId);
+            setPlayerId(msg.playerId); // spara det återtagna id:t för nästa gång
+          }
         } else if (msg.type === 'error') {
           setError(msg.message);
         }
@@ -84,7 +95,7 @@ export function useTournament(
       if (retryTimer) clearTimeout(retryTimer);
       wsRef.current?.close();
     };
-  }, [slug, playerId]);
+  }, [slug, requestedPlayerId]);
 
   const send = useCallback((msg: ClientMsg) => {
     const ws = wsRef.current;
@@ -94,5 +105,5 @@ export function useTournament(
   const serverNow = useCallback(() => Date.now() + offsetRef.current, []);
   const clearError = useCallback(() => setError(null), []);
 
-  return { snapshot, connected, admin, error, clearError, send, serverNow };
+  return { snapshot, connected, admin, playerId, error, clearError, send, serverNow };
 }

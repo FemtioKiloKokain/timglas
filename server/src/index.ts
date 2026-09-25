@@ -91,11 +91,13 @@ wss.on('connection', (ws) => {
     try {
       if (msg.type === 'hello') {
         ctx.slug = sanitizeSlug(msg.tournament);
-        ctx.playerId = msg.playerId;
+        // Återta en befintlig spelare med samma namn (samma person – ny flik, enhet eller URL).
+        const existing = hub.findIdByName(ctx.slug, msg.name);
+        ctx.playerId = existing ?? msg.playerId;
         ctx.adminKey = msg.adminKey;
         ctx.admin = isAdmin(msg.adminKey, msg.name);
-        hub.setPlayer(ctx.slug, msg.playerId, msg.name);
-        ws.send(JSON.stringify({ type: 'welcome', admin: ctx.admin }));
+        hub.setPlayer(ctx.slug, ctx.playerId, msg.name);
+        ws.send(JSON.stringify({ type: 'welcome', admin: ctx.admin, playerId: ctx.playerId }));
         ws.send(JSON.stringify(hub.snapshot(ctx.slug)));
         broadcast(ctx.slug);
         return;
@@ -109,11 +111,16 @@ wss.on('connection', (ws) => {
 
       switch (msg.type) {
         case 'setName': {
+          const owner = hub.findIdByName(slug, msg.name);
+          if (owner && owner !== playerId) {
+            sendError(ws, 'Namnet är upptaget av en annan spelare');
+            break;
+          }
           hub.setPlayer(slug, playerId, msg.name);
           const nowAdmin = isAdmin(ctx.adminKey, msg.name);
           if (nowAdmin !== ctx.admin) {
             ctx.admin = nowAdmin;
-            ws.send(JSON.stringify({ type: 'welcome', admin: ctx.admin }));
+            ws.send(JSON.stringify({ type: 'welcome', admin: ctx.admin, playerId }));
           }
           break;
         }

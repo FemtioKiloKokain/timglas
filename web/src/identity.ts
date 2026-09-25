@@ -20,6 +20,14 @@ export function getPlayerId(): string {
   }
 }
 
+export function setPlayerId(id: string): void {
+  try {
+    localStorage.setItem(ID_KEY, id);
+  } catch {
+    /* privat läge e.d. */
+  }
+}
+
 export function getName(): string {
   try {
     return localStorage.getItem(NAME_KEY) ?? '';

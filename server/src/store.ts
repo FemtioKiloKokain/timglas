@@ -93,6 +93,17 @@ export class Hub {
     db.upsertPlayer(slug, id, name);
   }
 
+  /** Hittar id:t för en spelare vars namn matchar (skiftlägesokänsligt), annars null. */
+  findIdByName(slug: string, rawName: string): string | null {
+    const t = this.get(slug);
+    const target = normName(rawName);
+    if (!target) return null;
+    for (const [id, disp] of t.names) {
+      if (normName(disp) === target) return id;
+    }
+    return null;
+  }
+
   join(slug: string, playerId: string, roomIndex: number): void {
     const t = this.get(slug);
     const room = this.roomAt(t, roomIndex);
@@ -303,6 +314,10 @@ export class Hub {
     const v = Number.isFinite(vp) ? Math.round(vp) : 0;
     db.setAdjustment(slug, playerId, p, v);
   }
+}
+
+function normName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 function resetToLobby(room: PersistedRoom, bankMs: number): void {

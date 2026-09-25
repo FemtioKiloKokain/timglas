@@ -98,10 +98,11 @@ export interface ErrorMsg {
   message: string;
 }
 
-/** Per-anslutnings-meddelande: säger om just den här klienten är admin. */
+/** Per-anslutnings-meddelande: klientens faktiska id (kan ha återtagits via namn) + admin. */
 export interface WelcomeMsg {
   type: 'welcome';
   admin: boolean;
+  playerId: string;
 }
 
 export type ServerMsg = Snapshot | ErrorMsg | WelcomeMsg;

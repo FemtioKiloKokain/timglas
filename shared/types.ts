@@ -2,8 +2,8 @@
 
 /** Startbank per spelare: 10 minuter. */
 export const BANK_MS = 10 * 60 * 1000;
-/** Tillfällig bonus per tur: 20 sekunder. Används före banken och sparas inte mellan turer. */
-export const TURN_BONUS_MS = 20 * 1000;
+/** Tillfällig bonus per tur: 30 sekunder. Används före banken och sparas inte mellan turer. */
+export const TURN_BONUS_MS = 30 * 1000;
 /** Antal rum/bord per turnering. */
 export const ROOM_COUNT = 4;
 /** Max antal spelare per rum. */

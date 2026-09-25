@@ -86,7 +86,7 @@ export function AdminView({ settings, standings, onSave, onAdjust, onDelete, onC
             Spara tidsinställningar
           </button>
           <button className="btn btn-block btn-ghost" onClick={reset}>
-            Återställ till standard (10 min / 20 s)
+            Återställ till standard (10 min / 30 s)
           </button>
         </div>
       </section>

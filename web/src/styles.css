@@ -992,3 +992,7 @@ h2 {
 .small {
   font-size: 13px;
 }
+
+.centered-text {
+  text-align: center;
+}

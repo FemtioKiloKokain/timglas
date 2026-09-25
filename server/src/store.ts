@@ -149,19 +149,26 @@ export class Hub {
     const seat = room.seats.find((s) => s.playerId === playerId);
     if (!seat) throw new Error('Du sitter inte i rummet');
     seat.ready = ready;
+    this.persist(t);
+  }
 
-    // Starta automatiskt när alla i rummet är redo.
-    if (room.seats.length >= MIN_PLAYERS_TO_START && room.seats.every((s) => s.ready)) {
-      room.status = 'running';
-      room.currentSeat = 0;
-      room.turnStartedAt = Date.now();
-      room.paused = false;
-      room.pausedElapsedMs = 0;
-      room.gameId = randomUUID();
-      for (const s of room.seats) {
-        s.bankMs = t.settings.bankMs;
-        s.timedOut = false;
-      }
+  startGame(slug: string, playerId: string, roomIndex: number): void {
+    const t = this.get(slug);
+    const room = this.roomAt(t, roomIndex);
+    if (room.status !== 'lobby') throw new Error('Spelet är inte i lobbyläge');
+    if (!room.seats.some((s) => s.playerId === playerId)) throw new Error('Du sitter inte i rummet');
+    if (room.seats.length < MIN_PLAYERS_TO_START) throw new Error('För få spelare för att starta');
+    if (!room.seats.every((s) => s.ready)) throw new Error('Alla spelare måste vara redo');
+
+    room.status = 'running';
+    room.currentSeat = 0;
+    room.turnStartedAt = Date.now();
+    room.paused = false;
+    room.pausedElapsedMs = 0;
+    room.gameId = randomUUID();
+    for (const s of room.seats) {
+      s.bankMs = t.settings.bankMs;
+      s.timedOut = false;
     }
     this.persist(t);
   }

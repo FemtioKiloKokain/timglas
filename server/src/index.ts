@@ -148,6 +148,9 @@ wss.on('connection', (ws) => {
         case 'setReady':
           hub.setReady(slug, playerId, msg.roomIndex, msg.ready);
           break;
+        case 'startGame':
+          hub.startGame(slug, playerId, msg.roomIndex);
+          break;
         case 'pressClock':
           hub.press(slug, playerId, msg.roomIndex);
           break;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ClientMsg, RoomView } from '@shared/types';
-import { derivePlacements, fmtTime, MAX_SEATS, ordinal } from '@shared/types';
+import { derivePlacements, fmtTime, MAX_SEATS, MIN_PLAYERS_TO_START, ordinal } from '@shared/types';
 import { resourceFor } from '../resources';
 
 interface RoomScreenProps {
@@ -52,6 +52,7 @@ function Lobby({
 }) {
   const mySeat = room.seats.find((s) => s.playerId === playerId);
   const roomFull = room.seats.length >= MAX_SEATS;
+  const canStart = room.seats.length >= MIN_PLAYERS_TO_START && room.seats.every((s) => s.ready);
 
   const move = (index: number, dir: -1 | 1) => {
     const order = room.seats.map((s) => s.playerId);
@@ -64,8 +65,8 @@ function Lobby({
   return (
     <div className="stack">
       <p className="muted">
-        Turordning bestäms av tärningskast – dra spelarna till rätt ordning med pilarna. Klockan startar
-        automatiskt när alla har tryckt <strong>Redo</strong>.
+        Turordning bestäms av tärningskast – dra spelarna till rätt ordning med pilarna. När alla har tryckt{' '}
+        <strong>Redo</strong> kan spelet startas.
       </p>
 
       <ol className="seat-list">
@@ -103,6 +104,20 @@ function Lobby({
             >
               {mySeat.ready ? 'Avmarkera redo' : 'Jag är redo'}
             </button>
+            <button
+              className="btn btn-block btn-primary"
+              disabled={!canStart}
+              onClick={() => send({ type: 'startGame', roomIndex: room.index })}
+            >
+              Starta spelet
+            </button>
+            {!canStart && (
+              <p className="muted small centered-text">
+                {room.seats.length < MIN_PLAYERS_TO_START
+                  ? `Minst ${MIN_PLAYERS_TO_START} spelare krävs.`
+                  : 'Väntar på att alla ska bli redo.'}
+              </p>
+            )}
             <button className="btn btn-block btn-ghost" onClick={() => send({ type: 'leaveRoom' })}>
               Lämna rummet
             </button>

@@ -117,6 +117,7 @@ export type ClientMsg =
   | { type: 'leaveRoom' }
   | { type: 'reorder'; roomIndex: number; order: string[] }
   | { type: 'setReady'; roomIndex: number; ready: boolean }
+  | { type: 'startGame'; roomIndex: number }
   | { type: 'pressClock'; roomIndex: number }
   | { type: 'setPaused'; roomIndex: number; paused: boolean }
   | { type: 'endGame'; roomIndex: number }

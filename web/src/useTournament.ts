@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClientMsg, ServerMsg, Snapshot } from '@shared/types';
+import { serverWsUrl } from './config';
 
 export interface TournamentConnection {
   snapshot: Snapshot | null;
@@ -35,8 +36,7 @@ export function useTournament(
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
     function connect(): void {
-      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      const ws = new WebSocket(`${proto}://${location.host}/ws`);
+      const ws = new WebSocket(serverWsUrl());
       wsRef.current = ws;
 
       ws.onopen = () => {

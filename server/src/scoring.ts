@@ -3,12 +3,13 @@
 // Placering och placeringspoäng härleds ur VP vid rapportering (se
 // derivePlacements i shared/types) och lagras per resultatrad. Här summeras
 // de bara. Summerade VP är skiljeutslag vid lika totalpoäng.
-import { getPlayersMap, getResults } from './db';
+import { getAdjustments, getPlayersMap, getResults } from './db';
 import type { StandingRow } from '../../shared/types';
 
 export function computeStandings(tournament: string): StandingRow[] {
   const players = getPlayersMap(tournament);
   const results = getResults(tournament);
+  const adjustments = getAdjustments(tournament);
 
   type Agg = { games: number; points: number; vp: number; wins: number; timeouts: number };
   const agg = new Map<string, Agg>();
@@ -33,15 +34,20 @@ export function computeStandings(tournament: string): StandingRow[] {
     if (r.timedOut) a.timeouts += 1;
   }
 
-  const rows: StandingRow[] = [...agg.entries()].map(([playerId, a]) => ({
-    playerId,
-    name: players.get(playerId) ?? 'Spelare',
-    games: a.games,
-    points: a.points,
-    vp: a.vp,
-    wins: a.wins,
-    timeouts: a.timeouts,
-  }));
+  const rows: StandingRow[] = [...agg.entries()].map(([playerId, a]) => {
+    const adj = adjustments.get(playerId) ?? { points: 0, vp: 0 };
+    return {
+      playerId,
+      name: players.get(playerId) ?? 'Spelare',
+      games: a.games,
+      points: a.points + adj.points,
+      vp: a.vp + adj.vp,
+      wins: a.wins,
+      timeouts: a.timeouts,
+      adjustPoints: adj.points,
+      adjustVp: adj.vp,
+    };
+  });
 
   rows.sort(
     (x, y) =>

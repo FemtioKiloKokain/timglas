@@ -70,11 +70,17 @@ export interface StandingRow {
   playerId: string;
   name: string;
   games: number;
+  /** Totalpoäng inklusive ev. admin-justering. */
   points: number;
+  /** Total VP inklusive ev. admin-justering. */
   vp: number;
   wins: number;
   /** Antal matcher där spelaren tömde sin tidsbank. */
   timeouts: number;
+  /** Admin-justering av poäng (delta som ingår i points). */
+  adjustPoints: number;
+  /** Admin-justering av VP (delta som ingår i vp). */
+  adjustVp: number;
 }
 
 export interface Snapshot {
@@ -104,6 +110,7 @@ export type ClientMsg =
   | { type: 'hello'; tournament: string; playerId: string; name: string; adminKey?: string }
   | { type: 'setName'; name: string }
   | { type: 'setSettings'; bankMs: number; turnBonusMs: number }
+  | { type: 'setAdjustment'; playerId: string; points: number; vp: number }
   | { type: 'joinRoom'; roomIndex: number }
   | { type: 'leaveRoom' }
   | { type: 'reorder'; roomIndex: number; order: string[] }

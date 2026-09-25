@@ -53,7 +53,7 @@ export function Home({ slug, snapshot, playerId, onOpenRoom }: HomeProps) {
 
       <p className="muted small">
         Poäng: placering (3-2-1-0) med summerade victory points som skiljeutslag. ⏳ = matcher där
-        tidsbanken tog slut.
+        tidsbanken tog slut. * = justerad av admin.
       </p>
     </div>
   );
@@ -125,13 +125,22 @@ function Standings({ snapshot, playerId }: { snapshot: Snapshot; playerId: strin
         </thead>
         <tbody>
           {rows.map((r, i) => {
-            const classes = [r.playerId === playerId ? 'me' : '', r.games === 0 ? 'inactive' : '']
+            const adjusted = r.adjustPoints !== 0 || r.adjustVp !== 0;
+            const hasStanding = r.games > 0 || adjusted;
+            const classes = [r.playerId === playerId ? 'me' : '', hasStanding ? '' : 'inactive']
               .filter(Boolean)
               .join(' ');
             return (
               <tr key={r.playerId} className={classes}>
-                <td>{r.games > 0 ? i + 1 : '–'}</td>
-                <td>{r.name}</td>
+                <td>{hasStanding ? i + 1 : '–'}</td>
+                <td>
+                  {r.name}
+                  {adjusted && (
+                    <span className="adj-mark" title="Justerad av admin">
+                      *
+                    </span>
+                  )}
+                </td>
                 <td className="num strong">{r.points}</td>
                 <td className="num">{r.vp}</td>
                 <td className="num">{r.wins}</td>

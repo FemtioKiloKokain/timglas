@@ -70,6 +70,14 @@ db.exec(`
     bank_ms       INTEGER NOT NULL,
     turn_bonus_ms INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS adjustments (
+    tournament TEXT NOT NULL,
+    player_id  TEXT NOT NULL,
+    points     INTEGER NOT NULL DEFAULT 0,
+    vp         INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (tournament, player_id)
+  );
 `);
 
 // Migreringar: lägg till kolumner för databaser skapade innan de fanns.
@@ -171,6 +179,25 @@ export function loadAllSettings(): Map<string, Settings> {
   const m = new Map<string, Settings>();
   for (const r of stmtAllSettings.all() as { tournament: string; bank_ms: number; turn_bonus_ms: number }[]) {
     m.set(r.tournament, { bankMs: r.bank_ms, turnBonusMs: r.turn_bonus_ms });
+  }
+  return m;
+}
+
+const stmtSaveAdjustment = db.prepare(
+  `INSERT INTO adjustments (tournament, player_id, points, vp) VALUES (?, ?, ?, ?)
+   ON CONFLICT(tournament, player_id) DO UPDATE SET points = excluded.points, vp = excluded.vp`,
+);
+export function setAdjustment(tournament: string, playerId: string, points: number, vp: number): void {
+  stmtSaveAdjustment.run(tournament, playerId, points, vp);
+}
+
+const stmtAdjustmentsOf = db.prepare(
+  `SELECT player_id AS playerId, points, vp FROM adjustments WHERE tournament = ?`,
+);
+export function getAdjustments(tournament: string): Map<string, { points: number; vp: number }> {
+  const m = new Map<string, { points: number; vp: number }>();
+  for (const r of stmtAdjustmentsOf.all(tournament) as { playerId: string; points: number; vp: number }[]) {
+    m.set(r.playerId, { points: r.points, vp: r.vp });
   }
   return m;
 }

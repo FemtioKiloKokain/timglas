@@ -296,6 +296,13 @@ export class Hub {
     t.settings = clampSettings({ bankMs, turnBonusMs });
     db.saveSettings(slug, t.settings);
   }
+
+  setAdjustment(slug: string, playerId: string, points: number, vp: number): void {
+    this.get(slug); // säkerställ att tävlingen finns
+    const p = Number.isFinite(points) ? Math.round(points) : 0;
+    const v = Number.isFinite(vp) ? Math.round(vp) : 0;
+    db.setAdjustment(slug, playerId, p, v);
+  }
 }
 
 function resetToLobby(room: PersistedRoom, bankMs: number): void {

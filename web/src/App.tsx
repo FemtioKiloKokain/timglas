@@ -127,7 +127,9 @@ function ConnectedTournament({
     content = (
       <AdminView
         settings={snapshot.settings}
+        standings={snapshot.standings}
         onSave={(bankMs, turnBonusMs) => send({ type: 'setSettings', bankMs, turnBonusMs })}
+        onAdjust={(playerId, points, vp) => send({ type: 'setAdjustment', playerId, points, vp })}
         onClose={() => setView({ name: 'home' })}
       />
     );

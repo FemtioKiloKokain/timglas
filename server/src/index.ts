@@ -121,6 +121,10 @@ wss.on('connection', (ws) => {
           if (!ctx.admin) throw new Error('Kräver admin');
           hub.setSettings(slug, msg.bankMs, msg.turnBonusMs);
           break;
+        case 'setAdjustment':
+          if (!ctx.admin) throw new Error('Kräver admin');
+          hub.setAdjustment(slug, msg.playerId, msg.points, msg.vp);
+          break;
         case 'joinRoom':
           hub.join(slug, playerId, msg.roomIndex);
           break;

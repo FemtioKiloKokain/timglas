@@ -10,12 +10,12 @@ export function computeStandings(tournament: string): StandingRow[] {
   const players = getPlayersMap(tournament);
   const results = getResults(tournament);
 
-  type Agg = { games: number; points: number; vp: number; wins: number };
+  type Agg = { games: number; points: number; vp: number; wins: number; timeouts: number };
   const agg = new Map<string, Agg>();
   const ensure = (id: string): Agg => {
     let a = agg.get(id);
     if (!a) {
-      a = { games: 0, points: 0, vp: 0, wins: 0 };
+      a = { games: 0, points: 0, vp: 0, wins: 0, timeouts: 0 };
       agg.set(id, a);
     }
     return a;
@@ -30,6 +30,7 @@ export function computeStandings(tournament: string): StandingRow[] {
     a.points += r.points;
     a.vp += r.vp;
     if (r.placement === 1) a.wins += 1;
+    if (r.timedOut) a.timeouts += 1;
   }
 
   const rows: StandingRow[] = [...agg.entries()].map(([playerId, a]) => ({
@@ -39,6 +40,7 @@ export function computeStandings(tournament: string): StandingRow[] {
     points: a.points,
     vp: a.vp,
     wins: a.wins,
+    timeouts: a.timeouts,
   }));
 
   rows.sort(

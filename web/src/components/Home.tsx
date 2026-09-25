@@ -52,7 +52,8 @@ export function Home({ slug, snapshot, playerId, onOpenRoom }: HomeProps) {
       </section>
 
       <p className="muted small">
-        Poäng: placering (3-2-1-0) med summerade victory points som skiljeutslag.
+        Poäng: placering (3-2-1-0) med summerade victory points som skiljeutslag. ⏳ = matcher där
+        tidsbanken tog slut.
       </p>
     </div>
   );
@@ -118,6 +119,7 @@ function Standings({ snapshot, playerId }: { snapshot: Snapshot; playerId: strin
             <th className="num">P</th>
             <th className="num">VP</th>
             <th className="num">V</th>
+            <th className="num" title="Matcher där tidsbanken tog slut">⏳</th>
             <th className="num">Sp</th>
           </tr>
         </thead>
@@ -133,6 +135,9 @@ function Standings({ snapshot, playerId }: { snapshot: Snapshot; playerId: strin
                 <td className="num strong">{r.points}</td>
                 <td className="num">{r.vp}</td>
                 <td className="num">{r.wins}</td>
+                <td className="num">
+                  {r.timeouts > 0 ? <span className="timeout-count">{r.timeouts}</span> : '–'}
+                </td>
                 <td className="num">{r.games}</td>
               </tr>
             );

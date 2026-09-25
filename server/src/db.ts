@@ -9,6 +9,7 @@ export interface PersistedSeat {
   playerId: string;
   ready: boolean;
   bankMs: number;
+  timedOut: boolean;
 }
 
 export interface PersistedRoom {
@@ -28,6 +29,7 @@ export interface ResultRow {
   placement: number;
   points: number;
   vp: number;
+  timedOut: number;
 }
 
 const DB_PATH = process.env.DB_PATH ?? 'data/tournament.db';
@@ -52,6 +54,7 @@ db.exec(`
     placement  INTEGER NOT NULL,
     points     INTEGER NOT NULL DEFAULT 0,
     vp         INTEGER NOT NULL DEFAULT 0,
+    timed_out  INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_results_tournament ON results(tournament);
@@ -69,9 +72,13 @@ db.exec(`
   );
 `);
 
-// Migrering: lägg till points-kolumnen för databaser skapade innan den fanns.
-if (!(db.pragma('table_info(results)') as { name: string }[]).some((c) => c.name === 'points')) {
+// Migreringar: lägg till kolumner för databaser skapade innan de fanns.
+const resultCols = (db.pragma('table_info(results)') as { name: string }[]).map((c) => c.name);
+if (!resultCols.includes('points')) {
   db.exec(`ALTER TABLE results ADD COLUMN points INTEGER NOT NULL DEFAULT 0`);
+}
+if (!resultCols.includes('timed_out')) {
+  db.exec(`ALTER TABLE results ADD COLUMN timed_out INTEGER NOT NULL DEFAULT 0`);
 }
 
 const stmtUpsertPlayer = db.prepare(
@@ -127,23 +134,25 @@ export function loadAllRooms(): Map<string, PersistedRoom[]> {
 }
 
 const stmtInsertResult = db.prepare(
-  `INSERT INTO results (tournament, game_id, player_id, placement, points, vp, created_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  `INSERT INTO results (tournament, game_id, player_id, placement, points, vp, timed_out, created_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 );
 export function insertResults(
   tournament: string,
   gameId: string,
-  rows: { playerId: string; placement: number; points: number; vp: number }[],
+  rows: { playerId: string; placement: number; points: number; vp: number; timedOut: number }[],
   now: number,
 ): void {
   const tx = db.transaction((rs: typeof rows) => {
-    for (const r of rs) stmtInsertResult.run(tournament, gameId, r.playerId, r.placement, r.points, r.vp, now);
+    for (const r of rs)
+      stmtInsertResult.run(tournament, gameId, r.playerId, r.placement, r.points, r.vp, r.timedOut, now);
   });
   tx(rows);
 }
 
 const stmtResultsOf = db.prepare(
-  `SELECT game_id AS gameId, player_id AS playerId, placement, points, vp FROM results WHERE tournament = ?`,
+  `SELECT game_id AS gameId, player_id AS playerId, placement, points, vp, timed_out AS timedOut
+   FROM results WHERE tournament = ?`,
 );
 export function getResults(tournament: string): ResultRow[] {
   return stmtResultsOf.all(tournament) as ResultRow[];

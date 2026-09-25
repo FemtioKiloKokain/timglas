@@ -106,7 +106,7 @@ export class Hub {
     }
 
     if (room.seats.length >= MAX_SEATS) throw new Error('Rummet är fullt');
-    room.seats.push({ playerId, ready: false, bankMs: t.settings.bankMs });
+    room.seats.push({ playerId, ready: false, bankMs: t.settings.bankMs, timedOut: false });
     this.persist(t);
   }
 
@@ -147,7 +147,10 @@ export class Hub {
       room.paused = false;
       room.pausedElapsedMs = 0;
       room.gameId = randomUUID();
-      for (const s of room.seats) s.bankMs = t.settings.bankMs;
+      for (const s of room.seats) {
+        s.bankMs = t.settings.bankMs;
+        s.timedOut = false;
+      }
     }
     this.persist(t);
   }
@@ -165,6 +168,7 @@ export class Hub {
     // Turbonusen används först; banken tickar bara på överskjutande tid.
     const overflow = Math.max(0, elapsed - t.settings.turnBonusMs);
     current.bankMs = Math.max(0, current.bankMs - overflow);
+    if (current.bankMs === 0) current.timedOut = true;
 
     room.currentSeat = (room.currentSeat + 1) % room.seats.length;
     room.turnStartedAt = now;
@@ -197,6 +201,16 @@ export class Hub {
     const room = this.roomAt(t, roomIndex);
     if (room.status !== 'running') throw new Error('Inget pågående spel');
     if (!room.seats.some((s) => s.playerId === playerId)) throw new Error('Du sitter inte i rummet');
+
+    // Slutför den aktiva spelarens tur så att en ev. tömd bank fångas.
+    if (room.turnStartedAt != null) {
+      const cur = room.seats[room.currentSeat];
+      const elapsed = room.paused ? room.pausedElapsedMs : Date.now() - room.turnStartedAt;
+      const overflow = Math.max(0, elapsed - t.settings.turnBonusMs);
+      cur.bankMs = Math.max(0, cur.bankMs - overflow);
+      if (cur.bankMs === 0) cur.timedOut = true;
+    }
+
     room.status = 'reporting';
     room.turnStartedAt = null;
     room.paused = false;
@@ -241,6 +255,7 @@ export class Hub {
       placement: p.placement,
       points: p.points,
       vp: p.vp,
+      timedOut: room.seats.find((s) => s.playerId === p.playerId)?.timedOut ? 1 : 0,
     }));
     db.insertResults(slug, gameId, rows, Date.now());
 
@@ -263,6 +278,7 @@ export class Hub {
         name: t.names.get(s.playerId) ?? 'Spelare',
         ready: s.ready,
         bankMs: s.bankMs,
+        timedOut: s.timedOut ?? false,
       })),
     }));
     return {
@@ -292,6 +308,7 @@ function resetToLobby(room: PersistedRoom, bankMs: number): void {
   for (const s of room.seats) {
     s.ready = false;
     s.bankMs = bankMs;
+    s.timedOut = false;
   }
 }
 

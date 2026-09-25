@@ -190,10 +190,12 @@ function Clock({
         {room.seats.map((s, i) => (
           <div
             key={s.playerId}
-            className={`clock-seat${i === room.currentSeat ? ' current' : ''}${s.playerId === playerId ? ' me' : ''}`}
+            className={`clock-seat${i === room.currentSeat ? ' current' : ''}${
+              s.playerId === playerId ? ' me' : ''
+            }${s.timedOut ? ' out' : ''}`}
           >
             <span className="clock-seat-name">{s.name}</span>
-            <span className="clock-seat-bank">{fmtTime(s.bankMs)}</span>
+            <span className="clock-seat-bank">{s.timedOut ? 'Slut' : fmtTime(s.bankMs)}</span>
           </div>
         ))}
       </div>

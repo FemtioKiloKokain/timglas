@@ -663,6 +663,11 @@ h2 {
   color: var(--muted);
 }
 
+.timeout-count {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 /* Seat list (lobby + reporting) */
 .seat-list {
   list-style: none;
@@ -885,6 +890,17 @@ h2 {
 .clock-seat.current {
   border-color: var(--current);
   background: rgba(227, 168, 40, 0.18);
+}
+
+.clock-seat.out {
+  border-color: var(--danger);
+}
+
+.clock-seat.out .clock-seat-bank {
+  color: var(--danger);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.06em;
 }
 
 .clock-seat.me .clock-seat-name {

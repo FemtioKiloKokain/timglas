@@ -46,6 +46,8 @@ export interface SeatView {
   ready: boolean;
   /** Kvarvarande bank i ms (exkl. den tillfälliga turbonusen). */
   bankMs: number;
+  /** Sant om spelaren tömt sin tidsbank (nått 0) under spelet. */
+  timedOut: boolean;
 }
 
 export interface RoomView {
@@ -71,6 +73,8 @@ export interface StandingRow {
   points: number;
   vp: number;
   wins: number;
+  /** Antal matcher där spelaren tömde sin tidsbank. */
+  timeouts: number;
 }
 
 export interface Snapshot {

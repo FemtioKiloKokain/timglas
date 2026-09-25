@@ -134,6 +134,7 @@ function ConnectedTournament({
         standings={snapshot.standings}
         onSave={(bankMs, turnBonusMs) => send({ type: 'setSettings', bankMs, turnBonusMs })}
         onAdjust={(playerId, points, vp) => send({ type: 'setAdjustment', playerId, points, vp })}
+        onDelete={(playerId) => send({ type: 'deletePlayer', playerId })}
         onClose={() => setView({ name: 'home' })}
       />
     );

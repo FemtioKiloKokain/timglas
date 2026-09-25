@@ -201,3 +201,15 @@ export function getAdjustments(tournament: string): Map<string, { points: number
   }
   return m;
 }
+
+const stmtDeletePlayer = db.prepare(`DELETE FROM players WHERE tournament = ? AND id = ?`);
+const stmtDeletePlayerResults = db.prepare(`DELETE FROM results WHERE tournament = ? AND player_id = ?`);
+const stmtDeletePlayerAdjustment = db.prepare(`DELETE FROM adjustments WHERE tournament = ? AND player_id = ?`);
+export function deletePlayerData(tournament: string, playerId: string): void {
+  const tx = db.transaction(() => {
+    stmtDeletePlayer.run(tournament, playerId);
+    stmtDeletePlayerResults.run(tournament, playerId);
+    stmtDeletePlayerAdjustment.run(tournament, playerId);
+  });
+  tx();
+}

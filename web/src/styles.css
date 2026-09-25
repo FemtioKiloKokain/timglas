@@ -490,6 +490,10 @@ h2 {
   margin-left: 2px;
 }
 
+.adjust-del {
+  border-color: var(--danger);
+}
+
 /* Cards / prompts */
 .card {
   max-width: 460px;

@@ -7,10 +7,11 @@ interface AdminViewProps {
   standings: StandingRow[];
   onSave: (bankMs: number, turnBonusMs: number) => void;
   onAdjust: (playerId: string, points: number, vp: number) => void;
+  onDelete: (playerId: string) => void;
   onClose: () => void;
 }
 
-export function AdminView({ settings, standings, onSave, onAdjust, onClose }: AdminViewProps) {
+export function AdminView({ settings, standings, onSave, onAdjust, onDelete, onClose }: AdminViewProps) {
   const [bankMin, setBankMin] = useState(String(settings.bankMs / 60000));
   const [bonusSec, setBonusSec] = useState(String(settings.turnBonusMs / 1000));
 
@@ -94,11 +95,11 @@ export function AdminView({ settings, standings, onSave, onAdjust, onClose }: Ad
         <h2 className="section-title">Justera poängställning</h2>
         <p className="muted small">
           Justeringen adderas till spelarens total. Δp = poäng, ΔVP = victory points. Sätt till 0 för att ta
-          bort. Justerade spelare markeras med * i tabellen.
+          bort. Justerade spelare markeras med * i tabellen. 🗑 raderar spelaren och all deras data.
         </p>
         <ul className="adjust-list">
           {players.map((row) => (
-            <AdjustRow key={row.playerId} row={row} onAdjust={onAdjust} />
+            <AdjustRow key={row.playerId} row={row} onAdjust={onAdjust} onDelete={onDelete} />
           ))}
           {players.length === 0 && <li className="muted">Inga spelare än.</li>}
         </ul>
@@ -114,9 +115,11 @@ export function AdminView({ settings, standings, onSave, onAdjust, onClose }: Ad
 function AdjustRow({
   row,
   onAdjust,
+  onDelete,
 }: {
   row: StandingRow;
   onAdjust: (playerId: string, points: number, vp: number) => void;
+  onDelete: (playerId: string) => void;
 }) {
   const [p, setP] = useState(String(row.adjustPoints));
   const [v, setV] = useState(String(row.adjustVp));
@@ -145,6 +148,17 @@ function AdjustRow({
         aria-label="Spara justering"
       >
         ✓
+      </button>
+      <button
+        className="btn btn-icon adjust-del"
+        onClick={() => {
+          if (window.confirm(`Radera ${row.name} och all deras data? Detta går inte att ångra.`)) {
+            onDelete(row.playerId);
+          }
+        }}
+        aria-label="Radera spelare"
+      >
+        🗑
       </button>
     </li>
   );

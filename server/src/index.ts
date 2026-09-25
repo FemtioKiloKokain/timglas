@@ -132,6 +132,10 @@ wss.on('connection', (ws) => {
           if (!ctx.admin) throw new Error('Kräver admin');
           hub.setAdjustment(slug, msg.playerId, msg.points, msg.vp);
           break;
+        case 'deletePlayer':
+          if (!ctx.admin) throw new Error('Kräver admin');
+          hub.deletePlayer(slug, msg.playerId);
+          break;
         case 'joinRoom':
           hub.join(slug, playerId, msg.roomIndex);
           break;

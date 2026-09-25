@@ -112,6 +112,7 @@ export type ClientMsg =
   | { type: 'setName'; name: string }
   | { type: 'setSettings'; bankMs: number; turnBonusMs: number }
   | { type: 'setAdjustment'; playerId: string; points: number; vp: number }
+  | { type: 'deletePlayer'; playerId: string }
   | { type: 'joinRoom'; roomIndex: number }
   | { type: 'leaveRoom' }
   | { type: 'reorder'; roomIndex: number; order: string[] }

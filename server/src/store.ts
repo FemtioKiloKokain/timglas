@@ -314,6 +314,20 @@ export class Hub {
     const v = Number.isFinite(vp) ? Math.round(vp) : 0;
     db.setAdjustment(slug, playerId, p, v);
   }
+
+  deletePlayer(slug: string, playerId: string): void {
+    const t = this.get(slug);
+    const room = this.roomOf(t, playerId);
+    if (room && room.status !== 'lobby') {
+      throw new Error('Spelaren sitter i ett pågående spel – avsluta eller avbryt det först');
+    }
+    if (room) {
+      room.seats = room.seats.filter((s) => s.playerId !== playerId);
+      this.persist(t);
+    }
+    t.names.delete(playerId);
+    db.deletePlayerData(slug, playerId);
+  }
 }
 
 function normName(name: string): string {

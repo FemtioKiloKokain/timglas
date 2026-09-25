@@ -94,8 +94,9 @@ export function AdminView({ settings, standings, onSave, onAdjust, onDelete, onC
       <section>
         <h2 className="section-title">Justera poängställning</h2>
         <p className="muted small">
-          Justeringen adderas till spelarens total. Δp = poäng, ΔVP = victory points. Sätt till 0 för att ta
-          bort. Justerade spelare markeras med * i tabellen. 🗑 raderar spelaren och all deras data.
+          <strong>Sätt total</strong> anger spelarens slutpoäng/VP direkt. <strong>Justera ±</strong> lägger
+          till eller drar av (0 = ingen justering). Båda lagras som en justering ovanpå matchresultaten och
+          markeras med * i tabellen. 🗑 raderar spelaren och all deras data.
         </p>
         <ul className="adjust-list">
           {players.map((row) => (
@@ -121,45 +122,73 @@ function AdjustRow({
   onAdjust: (playerId: string, points: number, vp: number) => void;
   onDelete: (playerId: string) => void;
 }) {
-  const [p, setP] = useState(String(row.adjustPoints));
-  const [v, setV] = useState(String(row.adjustVp));
-  const dirty = (Number(p) || 0) !== row.adjustPoints || (Number(v) || 0) !== row.adjustVp;
+  // Poäng/VP som kommer från matcher (totalen minus nuvarande justering).
+  const gamesPoints = row.points - row.adjustPoints;
+  const gamesVp = row.vp - row.adjustVp;
+
+  const [setP, setSetP] = useState(String(row.points));
+  const [setV, setSetV] = useState(String(row.vp));
+  const [adjP, setAdjP] = useState(String(row.adjustPoints));
+  const [adjV, setAdjV] = useState(String(row.adjustVp));
+
+  const setDirty = (Number(setP) || 0) !== row.points || (Number(setV) || 0) !== row.vp;
+  const adjDirty = (Number(adjP) || 0) !== row.adjustPoints || (Number(adjV) || 0) !== row.adjustVp;
+
+  const applySet = () =>
+    onAdjust(row.playerId, (Number(setP) || 0) - gamesPoints, (Number(setV) || 0) - gamesVp);
+  const applyAdjust = () => onAdjust(row.playerId, Number(adjP) || 0, Number(adjV) || 0);
 
   return (
     <li className="adjust-row">
-      <div className="adjust-info">
+      <div className="adjust-head">
         <span className="adjust-name">{row.name}</span>
         <span className="adjust-total">
           Totalt: {row.points} p · {row.vp} VP
         </span>
+        <button
+          className="btn btn-icon adjust-del"
+          onClick={() => {
+            if (window.confirm(`Radera ${row.name} och all deras data? Detta går inte att ångra.`)) {
+              onDelete(row.playerId);
+            }
+          }}
+          aria-label="Radera spelare"
+        >
+          🗑
+        </button>
       </div>
-      <label className="adjust-field">
-        <span>Δp</span>
-        <input className="vp-input" type="number" step={1} value={p} onChange={(e) => setP(e.target.value)} />
-      </label>
-      <label className="adjust-field">
-        <span>ΔVP</span>
-        <input className="vp-input" type="number" step={1} value={v} onChange={(e) => setV(e.target.value)} />
-      </label>
-      <button
-        className="btn btn-icon"
-        disabled={!dirty}
-        onClick={() => onAdjust(row.playerId, Number(p) || 0, Number(v) || 0)}
-        aria-label="Spara justering"
-      >
-        ✓
-      </button>
-      <button
-        className="btn btn-icon adjust-del"
-        onClick={() => {
-          if (window.confirm(`Radera ${row.name} och all deras data? Detta går inte att ångra.`)) {
-            onDelete(row.playerId);
-          }
-        }}
-        aria-label="Radera spelare"
-      >
-        🗑
-      </button>
+
+      <div className="adjust-groups">
+        <div className="adjust-group">
+          <span className="adjust-group-label">Sätt total</span>
+          <label className="adjust-field">
+            <span>P</span>
+            <input className="vp-input" type="number" step={1} value={setP} onChange={(e) => setSetP(e.target.value)} />
+          </label>
+          <label className="adjust-field">
+            <span>VP</span>
+            <input className="vp-input" type="number" step={1} value={setV} onChange={(e) => setSetV(e.target.value)} />
+          </label>
+          <button className="btn btn-icon" disabled={!setDirty} onClick={applySet} aria-label="Sätt total">
+            ✓
+          </button>
+        </div>
+
+        <div className="adjust-group">
+          <span className="adjust-group-label">Justera ±</span>
+          <label className="adjust-field">
+            <span>Δp</span>
+            <input className="vp-input" type="number" step={1} value={adjP} onChange={(e) => setAdjP(e.target.value)} />
+          </label>
+          <label className="adjust-field">
+            <span>ΔVP</span>
+            <input className="vp-input" type="number" step={1} value={adjV} onChange={(e) => setAdjV(e.target.value)} />
+          </label>
+          <button className="btn btn-icon" disabled={!adjDirty} onClick={applyAdjust} aria-label="Spara justering">
+            ✓
+          </button>
+        </div>
+      </div>
     </li>
   );
 }
